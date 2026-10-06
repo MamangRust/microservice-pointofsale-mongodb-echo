@@ -1,0 +1,41 @@
+# Order service alerts.
+#
+# Metric names match the actual instrumentation (§8.1 poin 2):
+# requests_total / request_duration_seconds / errors_total exported by the OTel
+# collector under the golang_app namespace with the service_name label.
+groups:
+  - name: order-service-alerts
+    rules:
+      - alert: HighErrorRate_OrderService
+        expr: |
+          sum(rate(golang_app_errors_total{service_name="order-service"}[5m]))
+          / sum(rate(golang_app_requests_total{service_name="order-service"}[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: order-service
+        annotations:
+          summary: "High error rate on order-service"
+          description: "More than 10% of order-service requests fail in the last 5 minutes."
+
+      - alert: HighP95Latency_OrderService
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(golang_app_request_duration_seconds_bucket{service_name="order-service"}[5m]))) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: order-service
+        annotations:
+          summary: "P95 latency high on order-service"
+          description: "95th percentile latency of order-service exceeds 1s for 5 minutes."
+
+      - alert: NoTraffic_OrderService
+        expr: |
+          rate(golang_app_requests_total{service_name="order-service"}[10m]) == 0
+        for: 10m
+        labels:
+          severity: info
+          service: order-service
+        annotations:
+          summary: "No traffic on order-service"
+          description: "No requests recorded for order-service in the last 10 minutes."

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package pb;
+
+import "transaction/transaction.proto";
+
+option go_package = "github.com/MamangRust/microservice-point-of-sale-pb/stats;stats";
+
+service TransactionStatsStatusService {
+    rpc FindMonthStatusSuccess(FindMonthlyTransactionStatus) returns (ApiResponseTransactionMonthAmountSuccess){}
+    rpc FindYearStatusSuccess(FindYearlyTransactionStatus) returns (ApiResponseTransactionYearAmountSuccess){}
+    rpc FindMonthStatusFailed(FindMonthlyTransactionStatus) returns (ApiResponseTransactionMonthAmountFailed){}
+    rpc FindYearStatusFailed(FindYearlyTransactionStatus) returns (ApiResponseTransactionYearAmountFailed){}
+    rpc FindMonthStatusSuccessByMerchant(FindMonthlyTransactionStatusByMerchant) returns (ApiResponseTransactionMonthAmountSuccess){}
+    rpc FindYearStatusSuccessByMerchant(FindYearlyTransactionStatusByMerchant) returns (ApiResponseTransactionYearAmountSuccess){}
+    rpc FindMonthStatusFailedByMerchant(FindMonthlyTransactionStatusByMerchant) returns (ApiResponseTransactionMonthAmountFailed){}
+    rpc FindYearStatusFailedByMerchant(FindYearlyTransactionStatusByMerchant) returns (ApiResponseTransactionYearAmountFailed){}
+}
+
+service TransactionStatsMethodService {
+    rpc FindMonthMethodSuccess(MonthTransactionMethod) returns (ApiResponseTransactionMonthPaymentMethod){}
+    rpc FindYearMethodSuccess(YearTransactionMethod) returns (ApiResponseTransactionYearPaymentmethod){}
+    rpc FindMonthMethodFailed(MonthTransactionMethod) returns (ApiResponseTransactionMonthPaymentMethod){}
+    rpc FindYearMethodFailed(YearTransactionMethod) returns (ApiResponseTransactionYearPaymentmethod){}
+    rpc FindMonthMethodByMerchantSuccess(MonthTransactionMethodByMerchant) returns (ApiResponseTransactionMonthPaymentMethod){}
+    rpc FindYearMethodByMerchantSuccess(YearTransactionMethodByMerchant) returns (ApiResponseTransactionYearPaymentmethod){}
+    rpc FindMonthMethodByMerchantFailed(MonthTransactionMethodByMerchant) returns (ApiResponseTransactionMonthPaymentMethod){}
+    rpc FindYearMethodByMerchantFailed(YearTransactionMethodByMerchant) returns (ApiResponseTransactionYearPaymentmethod){}
+}

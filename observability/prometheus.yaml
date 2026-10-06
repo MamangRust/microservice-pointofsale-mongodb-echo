@@ -1,0 +1,54 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+rule_files:
+  - rules/*.yaml
+
+scrape_configs:
+  # All gRPC services (auth, role, user, category, cashier, merchant,
+  # order_item, order, product, transaction, apigateway) export OpenTelemetry
+  # metrics via OTLP to the collector, which re-exports them here with the
+  # `service_name` label. The per-service `/metrics` endpoints (8081-8090) do
+  # not exist — metrics must be scraped from the collector.
+  - job_name: 'otel-collector'
+    static_configs:
+      - targets: ['otel-collector:8889']
+        labels:
+          application: 'Otel Collector'
+          environment: 'production'
+
+  - job_name: 'kafka-exporter'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+        labels:
+          application: 'Kafka Exporter'
+          environment: 'production'
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          application: 'Node Exporter'
+          environment: 'production'
+
+  - job_name: 'apigateway'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['apigateway:8091']
+        labels:
+          application: 'API Gateway'
+          environment: 'production'
+
+  - job_name: 'email-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['email:8080']
+        labels:
+          application: 'Email Service'
+          environment: 'production'

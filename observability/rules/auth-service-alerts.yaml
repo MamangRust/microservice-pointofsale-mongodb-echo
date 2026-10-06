@@ -1,0 +1,44 @@
+# Auth service alerts.
+#
+# Metric names match the actual instrumentation (lessons learned §8.1 poin 2):
+# shared/observability/tracing_metrics.go records requests_total /
+# request_duration_seconds / errors_total with labels method, status, and the
+# OTel collector exports them under the golang_app namespace with the
+# service_name label. Old rules referenced phantom per-class metric names and
+# could never fire.
+groups:
+  - name: auth-service-alerts
+    rules:
+      - alert: HighErrorRate_AuthService
+        expr: |
+          sum(rate(golang_app_errors_total{service_name="auth-service"}[5m]))
+          / sum(rate(golang_app_requests_total{service_name="auth-service"}[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: auth-service
+        annotations:
+          summary: "High error rate on auth-service"
+          description: "More than 10% of auth-service requests fail (status='error') in the last 5 minutes."
+
+      - alert: HighP95Latency_AuthService
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(golang_app_request_duration_seconds_bucket{service_name="auth-service"}[5m]))) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: auth-service
+        annotations:
+          summary: "P95 latency high on auth-service"
+          description: "95th percentile latency of auth-service exceeds 1s for 5 minutes."
+
+      - alert: NoTraffic_AuthService
+        expr: |
+          rate(golang_app_requests_total{service_name="auth-service"}[10m]) == 0
+        for: 10m
+        labels:
+          severity: info
+          service: auth-service
+        annotations:
+          summary: "No traffic on auth-service"
+          description: "No requests recorded for auth-service in the last 10 minutes."

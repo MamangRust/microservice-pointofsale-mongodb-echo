@@ -1,0 +1,42 @@
+# Transaction service alerts.
+#
+# Metric names match the actual instrumentation (lessons learned §8.1 poin 2):
+# requests_total / request_duration_seconds / errors_total exported by the OTel
+# collector under the golang_app namespace with the service_name label. Old
+# rules referenced phantom per-class metric names and could never fire.
+groups:
+  - name: transaction-service-alerts
+    rules:
+      - alert: HighErrorRate_TransactionService
+        expr: |
+          sum(rate(golang_app_errors_total{service_name="transaction-service"}[5m]))
+          / sum(rate(golang_app_requests_total{service_name="transaction-service"}[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: transaction-service
+        annotations:
+          summary: "High error rate on transaction-service"
+          description: "More than 10% of transaction-service requests fail in the last 5 minutes."
+
+      - alert: HighP95Latency_TransactionService
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(golang_app_request_duration_seconds_bucket{service_name="transaction-service"}[5m]))) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: transaction-service
+        annotations:
+          summary: "P95 latency high on transaction-service"
+          description: "95th percentile latency of transaction-service exceeds 1s for 5 minutes."
+
+      - alert: NoTraffic_TransactionService
+        expr: |
+          rate(golang_app_requests_total{service_name="transaction-service"}[10m]) == 0
+        for: 10m
+        labels:
+          severity: info
+          service: transaction-service
+        annotations:
+          summary: "No traffic on transaction-service"
+          description: "No requests recorded for transaction-service in the last 10 minutes."

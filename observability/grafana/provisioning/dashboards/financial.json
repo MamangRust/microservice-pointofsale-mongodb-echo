@@ -1,0 +1,591 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Financial Commands \u2014 SLO & Health (POS)",
+    "uid": "financial-commands-pos",
+    "schemaVersion": 40,
+    "tags": [
+      "financial",
+      "slo",
+      "outbox",
+      "pos"
+    ],
+    "timezone": "browser",
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 0,
+        "title": "Financial Command Error Rate",
+        "type": "stat",
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 6,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(golang_app_requests_total{service_name=~\"order-service|transaction-service\", status=\"error\"}[1m])) / sum(rate(golang_app_requests_total{service_name=~\"order-service|transaction-service\"}[1m]))",
+            "refId": "A",
+            "legendFormat": "error rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.0014
+                },
+                {
+                  "color": "red",
+                  "value": 0.01
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        }
+      },
+      {
+        "id": 1,
+        "title": "Financial Command RPS",
+        "type": "stat",
+        "gridPos": {
+          "x": 6,
+          "y": 0,
+          "w": 6,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(golang_app_requests_total{service_name=~\"order-service|transaction-service\"}[1m]))",
+            "refId": "A",
+            "legendFormat": "rps"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "rps",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "blue",
+                  "value": null
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Financial Command p99 Latency",
+        "type": "stat",
+        "gridPos": {
+          "x": 12,
+          "y": 0,
+          "w": 6,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(golang_app_request_duration_seconds_bucket{service_name=~\"order-service|transaction-service\"}[1m])) by (le)) * 1000",
+            "refId": "A",
+            "legendFormat": "p99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 500
+                },
+                {
+                  "color": "red",
+                  "value": 1000
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Outbox Pending (Lag)",
+        "type": "stat",
+        "gridPos": {
+          "x": 18,
+          "y": 0,
+          "w": 6,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "sum(golang_app_outbox_events_pending)",
+            "refId": "A",
+            "legendFormat": "pending"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 100
+                },
+                {
+                  "color": "red",
+                  "value": 500
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "\ud83d\udcb0 Financial Command RPS by Service",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 4,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "sum by (service_name) (rate(golang_app_requests_total{service_name=~\"order-service|transaction-service\"}[1m]))",
+            "legendFormat": "{{service_name}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "fillOpacity": 20,
+              "lineWidth": 2,
+              "spanNulls": true
+            },
+            "unit": "rps"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "\ud83d\udcb8 Financial Command Error Rate by Service",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 4,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "sum by (service_name) (rate(golang_app_requests_total{service_name=~\"order-service|transaction-service\", status=\"error\"}[1m])) / sum by (service_name) (rate(golang_app_requests_total{service_name=~\"order-service|transaction-service\"}[1m]))",
+            "legendFormat": "{{service_name}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "fillOpacity": 20,
+              "lineWidth": 2,
+              "spanNulls": true
+            },
+            "unit": "percentunit",
+            "min": 0
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "\u23f1\ufe0f Financial Command Latency p95 by Service",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 12,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum by (le, service_name) (rate(golang_app_request_duration_seconds_bucket{service_name=~\"order-service|transaction-service\"}[1m]))) * 1000",
+            "legendFormat": "{{service_name}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "fillOpacity": 20,
+              "lineWidth": 2,
+              "spanNulls": true
+            },
+            "unit": "ms"
+          }
+        }
+      },
+      {
+        "id": 13,
+        "title": "\u23f1\ufe0f Financial Command Latency p99 by Service",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 12,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, sum by (le, service_name) (rate(golang_app_request_duration_seconds_bucket{service_name=~\"order-service|transaction-service\"}[1m]))) * 1000",
+            "legendFormat": "{{service_name}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "fillOpacity": 20,
+              "lineWidth": 2,
+              "spanNulls": true
+            },
+            "unit": "ms"
+          }
+        }
+      },
+      {
+        "id": 20,
+        "title": "\ud83d\udce8 Outbox Pending per Topic",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 20,
+          "w": 8,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "golang_app_outbox_events_pending",
+            "legendFormat": "{{service_name}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "fillOpacity": 20,
+              "lineWidth": 2,
+              "spanNulls": true
+            }
+          }
+        }
+      },
+      {
+        "id": 21,
+        "title": "\ud83d\udce8 Outbox Published vs Failed (rate)",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 8,
+          "y": 20,
+          "w": 8,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(golang_app_outbox_events_published_total[1m]))",
+            "legendFormat": "published",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(golang_app_outbox_events_failed_total[1m]))",
+            "legendFormat": "failed",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "fillOpacity": 20,
+              "lineWidth": 2,
+              "spanNulls": true
+            }
+          }
+        }
+      },
+      {
+        "id": 22,
+        "title": "\ud83d\udcca Stats Pipeline Consumer Lag (stats.* topics)",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 16,
+          "y": 20,
+          "w": 8,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "max by (topic) (kafka_consumergroup_lag{topic=~\"stats.*\"})",
+            "refId": "A",
+            "legendFormat": "{{topic}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 500
+                },
+                {
+                  "color": "red",
+                  "value": 5000
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        }
+      },
+      {
+        "id": 30,
+        "title": "\ud83e\udde0 Cache Hit Rate (financial services)",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 28,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "sum by (service_name) (rate(golang_app_cache_hits_total{service_name=~\"order-service|transaction-service|apigateway\"}[1m])) / (sum by (service_name) (rate(golang_app_cache_hits_total{service_name=~\"order-service|transaction-service|apigateway\"}[1m])) + sum by (service_name) (rate(golang_app_cache_misses_total{service_name=~\"order-service|transaction-service|apigateway\"}[1m])))",
+            "legendFormat": "{{service_name}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "fillOpacity": 20,
+              "lineWidth": 2,
+              "spanNulls": true
+            },
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1
+          }
+        }
+      },
+      {
+        "id": 31,
+        "title": "\ud83e\udde0 Cache Op Duration p95 (financial services)",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 28,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum by (le, service_name) (rate(golang_app_cache_operation_duration_seconds_bucket{service_name=~\"order-service|transaction-service|apigateway\"}[1m]))) * 1000",
+            "legendFormat": "{{service_name}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "fillOpacity": 20,
+              "lineWidth": 2,
+              "spanNulls": true
+            },
+            "unit": "ms"
+          }
+        }
+      },
+      {
+        "id": 40,
+        "title": "\ud83e\uddfe Order/Transaction Command Success/Failure",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 36,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(golang_app_requests_total{service_name=~\"order-service|transaction-service\", method=~\"CreateOrder|UpdateOrder|CreateTransaction\", status=\"success\"}[1m]))",
+            "refId": "A",
+            "legendFormat": "success"
+          },
+          {
+            "expr": "sum(rate(golang_app_requests_total{service_name=~\"order-service|transaction-service\", method=~\"CreateOrder|UpdateOrder|CreateTransaction\", status=\"error\"}[1m]))",
+            "refId": "B",
+            "legendFormat": "error"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "rps",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "blue",
+                  "value": null
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        }
+      },
+      {
+        "id": 41,
+        "title": "\ud83e\uddfe Order/Transaction Command Latency p99",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 36,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, sum by (le) (rate(golang_app_request_duration_seconds_bucket{service_name=~\"order-service|transaction-service\", method=~\"CreateOrder|UpdateOrder|CreateTransaction\"}[1m])))",
+            "refId": "A",
+            "legendFormat": "p99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        }
+      }
+    ],
+    "time": {
+      "from": "now-30m",
+      "to": "now"
+    }
+  },
+  "overwrite": true
+}

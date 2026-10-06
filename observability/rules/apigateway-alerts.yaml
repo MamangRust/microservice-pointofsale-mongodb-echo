@@ -1,0 +1,43 @@
+# API gateway alerts.
+#
+# Metric names match the actual instrumentation (§8.1 poin 2): the gateway's
+# ApiHandler records requests_total / request_duration_seconds / errors_total
+# (shared/observability) exported by the OTel collector under the golang_app
+# namespace with service_name="apigateway". The old file referenced
+# payment-gateway services (saldo/topup/transfer) that do not exist here.
+groups:
+  - name: apigateway-alerts
+    rules:
+      - alert: HighErrorRate_Apigateway
+        expr: |
+          sum(rate(golang_app_errors_total{service_name="apigateway"}[5m]))
+          / sum(rate(golang_app_requests_total{service_name="apigateway"}[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: apigateway
+        annotations:
+          summary: "High error rate on apigateway"
+          description: "More than 10% of apigateway requests fail in the last 5 minutes."
+
+      - alert: HighP95Latency_Apigateway
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(golang_app_request_duration_seconds_bucket{service_name="apigateway"}[5m]))) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: apigateway
+        annotations:
+          summary: "P95 latency high on apigateway"
+          description: "95th percentile latency of apigateway exceeds 1s for 5 minutes."
+
+      - alert: NoTraffic_Apigateway
+        expr: |
+          rate(golang_app_requests_total{service_name="apigateway"}[10m]) == 0
+        for: 10m
+        labels:
+          severity: info
+          service: apigateway
+        annotations:
+          summary: "No traffic on apigateway"
+          description: "No requests recorded for apigateway in the last 10 minutes."

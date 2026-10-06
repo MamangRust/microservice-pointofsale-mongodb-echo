@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package pb;
+
+import "category/category.proto";
+
+option go_package = "github.com/MamangRust/microservice-point-of-sale-pb/stats;stats";
+
+service CategoryStatsService {
+    rpc FindMonthlyTotalPrices(FindYearMonthTotalPrices) returns (ApiResponseCategoryMonthlyTotalPrice){}
+    rpc FindYearlyTotalPrices(FindYearTotalPrices) returns (ApiResponseCategoryYearlyTotalPrice){}
+    rpc FindMonthPrice(FindYearCategory) returns(ApiResponseCategoryMonthPrice){}
+    rpc FindYearPrice(FindYearCategory) returns(ApiResponseCategoryYearPrice){}
+}
+
+service CategoryStatsByMerchantService {
+    rpc FindMonthlyTotalPricesByMerchant(FindYearMonthTotalPriceByMerchant) returns (ApiResponseCategoryMonthlyTotalPrice){}
+    rpc FindYearlyTotalPricesByMerchant(FindYearTotalPriceByMerchant) returns (ApiResponseCategoryYearlyTotalPrice){}
+    rpc FindMonthPriceByMerchant(FindYearCategoryByMerchant) returns(ApiResponseCategoryMonthPrice){}
+    rpc FindYearPriceByMerchant(FindYearCategoryByMerchant) returns(ApiResponseCategoryYearPrice){}
+}
+
+service CategoryStatsByIdService {
+    rpc FindMonthlyTotalPricesById(FindYearMonthTotalPriceById) returns (ApiResponseCategoryMonthlyTotalPrice){}
+    rpc FindYearlyTotalPricesById(FindYearTotalPriceById) returns (ApiResponseCategoryYearlyTotalPrice){}
+    rpc FindMonthPriceById(FindYearCategoryById) returns(ApiResponseCategoryMonthPrice){}
+    rpc FindYearPriceById(FindYearCategoryById) returns(ApiResponseCategoryYearPrice){}
+}

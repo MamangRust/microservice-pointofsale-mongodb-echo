@@ -1,0 +1,77 @@
+# Financial SLO alerts for money-moving commands (POS).
+#
+# Metric names here match the actual instrumentation (§8.1 poin 2 & 3):
+#   - shared/observability/tracing_metrics.go records requests_total /
+#     request_duration_seconds / errors_total with labels method, status.
+#   - The OTel collector exports them under the golang_app namespace and
+#     converts resource attributes (service.name) to the service_name label.
+#   - pkg/outbox records outbox_events_pending (gauge) and
+#     outbox_events_published / outbox_events_failed (counters) for the
+#     transactional outbox relay (F3/F6).
+#
+# SLO: 99.9% availability for order + transaction commands, 30-day budget.
+# Fast burn (14.4x) fires after ~2h of budget consumption; slow burn (6x) after
+# ~5h. Thresholds follow the payment-gateway reference (financial-slo-alerts).
+groups:
+  - name: financial-slo-alerts
+    rules:
+      - alert: FinancialCommandErrorBudgetFastBurn
+        expr: |
+          sum(rate(golang_app_errors_total{service_name=~"order-service|transaction-service"}[5m]))
+          / sum(rate(golang_app_requests_total{service_name=~"order-service|transaction-service"}[5m])) > 0.0014
+        for: 2h
+        labels:
+          severity: critical
+          service: financial_commands
+        annotations:
+          summary: "Financial command error budget burning fast"
+          description: "Error rate above 0.14% sustained for 2h on order/transaction commands. Investigate immediately."
+
+      - alert: FinancialCommandErrorBudgetSlowBurn
+        expr: |
+          sum(rate(golang_app_errors_total{service_name=~"order-service|transaction-service"}[30m]))
+          / sum(rate(golang_app_requests_total{service_name=~"order-service|transaction-service"}[30m])) > 0.0006
+        for: 5h
+        labels:
+          severity: warning
+          service: financial_commands
+        annotations:
+          summary: "Financial command error budget burning slow"
+          description: "Error rate above 0.06% sustained for 5h. Schedule remediation before the monthly budget is exhausted."
+
+      - alert: FinancialCommandP99Latency
+        expr: |
+          histogram_quantile(0.99, sum by (le) (rate(golang_app_request_duration_seconds_bucket{service_name=~"order-service|transaction-service"}[5m]))) > 1
+        for: 10m
+        labels:
+          severity: warning
+          service: financial_commands
+        annotations:
+          summary: "Financial command p99 latency above 1s"
+          description: "p99 latency of order/transaction commands exceeds 1s for 10 minutes."
+
+      # Outbox lag: pending events accumulate when the broker is down or the
+      # publisher is starved. Gauge is exported by pkg/outbox relay (F6).
+      - alert: OutboxLagGrowing
+        expr: |
+          sum(golang_app_outbox_events_pending) > 500
+        for: 15m
+        labels:
+          severity: warning
+          service: outbox
+        annotations:
+          summary: "Outbox backlog is growing"
+          description: "More than 500 outbox events waiting for delivery for 15 minutes. Check Kafka broker and relay workers."
+
+      # Broker availability for the outbox publisher: stale events block
+      # email/stats delivery and hide producer failures.
+      - alert: OutboxStaleEvents
+        expr: |
+          sum(increase(golang_app_outbox_events_failed_total[15m])) > 100
+        for: 15m
+        labels:
+          severity: warning
+          service: outbox
+        annotations:
+          summary: "Outbox publisher failing to deliver events"
+          description: "More than 100 outbox events failed to publish in 15 minutes. Check Kafka broker and relay workers."

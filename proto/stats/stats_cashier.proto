@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package pb;
+
+import "cashier/cashier.proto";
+
+option go_package = "github.com/MamangRust/microservice-point-of-sale-pb/stats;stats";
+
+service CashierStatsService {
+    rpc FindMonthlyTotalSales(FindYearMonthTotalSales) returns (ApiResponseCashierMonthlyTotalSales){}
+    rpc FindYearlyTotalSales(FindYearTotalSales) returns (ApiResponseCashierYearlyTotalSales){}
+    rpc FindMonthSales(FindYearCashier) returns(ApiResponseCashierMonthSales){}
+    rpc FindYearSales(FindYearCashier) returns(ApiResponseCashierYearSales){}
+}
+
+service CashierStatsByMerchantService {
+    rpc FindMonthlyTotalSalesByMerchant(FindYearMonthTotalSalesByMerchant) returns (ApiResponseCashierMonthlyTotalSales){}
+    rpc FindYearlyTotalSalesByMerchant(FindYearTotalSalesByMerchant) returns (ApiResponseCashierYearlyTotalSales){}
+    rpc FindMonthSalesByMerchant(FindYearCashierByMerchant) returns(ApiResponseCashierMonthSales){}
+    rpc FindYearSalesByMerchant(FindYearCashierByMerchant) returns(ApiResponseCashierYearSales){}
+}
+
+service CashierStatsByIdService {
+    rpc FindMonthlyTotalSalesById(FindYearMonthTotalSalesById) returns (ApiResponseCashierMonthlyTotalSales){}
+    rpc FindYearlyTotalSalesById(FindYearTotalSalesById) returns (ApiResponseCashierYearlyTotalSales){}
+    rpc FindMonthSalesById(FindYearCashierById) returns(ApiResponseCashierMonthSales){}
+    rpc FindYearSalesById(FindYearCashierById) returns(ApiResponseCashierYearSales){}
+}

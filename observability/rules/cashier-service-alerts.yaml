@@ -1,0 +1,41 @@
+# Cashier service alerts.
+#
+# Metric names match the actual instrumentation (§8.1 poin 2):
+# requests_total / request_duration_seconds / errors_total exported by the OTel
+# collector under the golang_app namespace with the service_name label.
+groups:
+  - name: cashier-service-alerts
+    rules:
+      - alert: HighErrorRate_CashierService
+        expr: |
+          sum(rate(golang_app_errors_total{service_name="cashier-service"}[5m]))
+          / sum(rate(golang_app_requests_total{service_name="cashier-service"}[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: cashier-service
+        annotations:
+          summary: "High error rate on cashier-service"
+          description: "More than 10% of cashier-service requests fail in the last 5 minutes."
+
+      - alert: HighP95Latency_CashierService
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(golang_app_request_duration_seconds_bucket{service_name="cashier-service"}[5m]))) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: cashier-service
+        annotations:
+          summary: "P95 latency high on cashier-service"
+          description: "95th percentile latency of cashier-service exceeds 1s for 5 minutes."
+
+      - alert: NoTraffic_CashierService
+        expr: |
+          rate(golang_app_requests_total{service_name="cashier-service"}[10m]) == 0
+        for: 10m
+        labels:
+          severity: info
+          service: cashier-service
+        annotations:
+          summary: "No traffic on cashier-service"
+          description: "No requests recorded for cashier-service in the last 10 minutes."

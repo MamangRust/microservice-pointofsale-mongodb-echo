@@ -1,0 +1,43 @@
+# Email service alerts.
+#
+# Metric names match the actual instrumentation (§8.1 poin 2): service/email
+# records email_sent_total / email_failed_total / email_duplicated_total /
+# email_invalid_total / email_retried_total / email_deadletter_total
+# (service/email/metrics/otel.go), exported by the OTel collector under the
+# golang_app namespace. The old rule referenced a phantom
+# email_service_requests_total metric and could never fire.
+groups:
+  - name: email-service-alerts
+    rules:
+      - alert: HighEmailFailureRate
+        expr: |
+          increase(golang_app_email_failed_total[15m]) > 50
+        for: 5m
+        labels:
+          severity: warning
+          service: email-service
+        annotations:
+          summary: "High email failure rate"
+          description: "More than 50 email sends failed in the last 15 minutes."
+
+      - alert: EmailDeadLetterGrowing
+        expr: |
+          increase(golang_app_email_deadletter_total[15m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: email-service
+        annotations:
+          summary: "Emails being dead-lettered"
+          description: "More than 10 emails dead-lettered after exhausting retries in the last 15 minutes."
+
+      - alert: EmailRetrySpike
+        expr: |
+          increase(golang_app_email_retried_total[15m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: email-service
+        annotations:
+          summary: "Email retry spike"
+          description: "More than 100 emails pushed to the retry topic in the last 15 minutes (SMTP degradation)."
